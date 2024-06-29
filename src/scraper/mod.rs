@@ -1,3 +1,3 @@
-pub fn placeholder() {
-    println!("temporario");
-}
+pub mod fetcher;
+pub mod parser;
+pub mod navigator;
