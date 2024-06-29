@@ -396,3 +396,9 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Rust Visual Code
+target/
+**/*.rs.bk
+**/*.rs.bkp
+**/*.rs.bak
