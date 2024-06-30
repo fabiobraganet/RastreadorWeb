@@ -4,9 +4,8 @@ use url::Url;
 use futures::future::join_all;
 use crate::scraper::parser::parse_links;
 use crate::scraper::fetcher::fetch_url;
-use crate::storage::persistence::salvar_resultados; // Certifique-se de que está importando corretamente
+use crate::storage::persistence::salvar_resultados;
 
-/// Navega recursivamente em páginas da web para coletar links.
 pub async fn navigate_links(
     client: &Client,
     url: &str,
@@ -26,26 +25,27 @@ pub async fn navigate_links(
     println!("Navegando na URL: {} com profundidade: {}", url, profundidade);
 
     match fetch_url(client, url).await {
-        Ok((html, content_type)) => process_url_response(
-            client,
-            url,
-            profundidade,
-            visitados,
-            dominio,
-            formato,
-            output,
-            resultados,
-            html,
-            content_type,
-        ).await,
+        Ok((html, content_type)) => {
+            process_url_response(
+                client,
+                url,
+                profundidade,
+                visitados,
+                dominio,
+                formato,
+                output,
+                resultados,
+                html,
+                content_type,
+            ).await
+        }
         Err(e) => {
             println!("Erro ao buscar URL {}: {}", url, e);
             vec![]
-        },
+        }
     }
 }
 
-/// Processa a resposta de uma URL, extraindo e salvando links.
 async fn process_url_response(
     client: &Client,
     url: &str,
@@ -74,9 +74,7 @@ async fn process_url_response(
 
     let subresultados = process_paths(client, url, profundidade, visitados, dominio, formato, output, resultados, links).await;
 
-    for subresultado in subresultados {
-        resultados.extend(subresultado);
-    }
+    resultados.extend(subresultados.clone());
 
     println!("Resultados acumulados: {:?}", resultados);
 
@@ -85,7 +83,6 @@ async fn process_url_response(
     resultados.clone()
 }
 
-/// Processa os caminhos (links) encontrados em uma página HTML, seguindo-os recursivamente.
 async fn process_paths(
     client: &Client,
     url: &str,
@@ -96,20 +93,23 @@ async fn process_paths(
     output: &str,
     resultados: &mut Vec<String>,
     links: Vec<String>,
-) -> Vec<Vec<String>> {
+) -> Vec<String> {
     let mut tarefas = vec![];
 
     for link in links {
         if let Ok(url_absoluta) = Url::parse(url).unwrap().join(&link) {
+            println!("URL absoluta gerada: {}", url_absoluta);
             if !visitados.contains(url_absoluta.as_str()) {
-                if url_absoluta.domain() == Some(dominio) {
-                    println!("Seguindo link: {}", url_absoluta);
+                if url_absoluta.host_str() == Some(dominio) {
+                    println!("Seguindo link dentro do domínio: {}", url_absoluta);
                     let client_clone = client.clone();
                     let url_absoluta_clone = url_absoluta.to_string();
                     let mut visitados_clone = visitados.clone();
                     let mut resultados_clone = resultados.clone();
                     tarefas.push(async move {
-                        navigate_links(&client_clone, &url_absoluta_clone, profundidade - 1, &mut visitados_clone, dominio, formato, output, &mut resultados_clone).await
+                        let subresultados = navigate_links(&client_clone, &url_absoluta_clone, profundidade - 1, &mut visitados_clone, dominio, formato, output, &mut resultados_clone).await;
+                        println!("Subresultados retornados: {:?}", subresultados);
+                        subresultados
                     });
                 } else {
                     println!("URL fora do domínio: {}", url_absoluta);
@@ -122,5 +122,6 @@ async fn process_paths(
         }
     }
 
-    join_all(tarefas).await
+    let subresultados = join_all(tarefas).await;
+    subresultados.into_iter().flatten().collect()
 }
