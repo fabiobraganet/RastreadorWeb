@@ -1,21 +1,15 @@
-use tokio::runtime::Runtime;
-use reqwest::Client;
-use rastreadorweb::scraper::fetcher::fetch_url;
-
-async fn fetch_data(url: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let client = Client::new();
-    let data = fetch_url(&client, url).await?;
-    Ok(data)
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use rastreadorweb::scraper::fetcher::fetch_url;
+    use reqwest::Client;
 
-    #[test]
-    fn test_fetch_url() {
-        let rt = Runtime::new().unwrap();
-        let result = rt.block_on(fetch_data("http://example.com")).unwrap();
-        assert!(result.contains("<title>Example Domain</title>"));
+    #[tokio::test]
+    async fn test_fetch_url() {
+        let client = Client::new();
+        let result = fetch_url(&client, "http://example.com").await;
+        assert!(result.is_ok());
+        let (data, content_type) = result.unwrap();
+        assert!(data.contains("<html"));  // Simples verificação para garantir que o HTML foi buscado
+        assert!(content_type.contains("text/html")); // Verifica se o content-type é HTML
     }
 }

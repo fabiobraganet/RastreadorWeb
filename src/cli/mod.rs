@@ -36,4 +36,12 @@ pub fn build_cli() -> App<'static, 'static> {
                 .possible_values(&["json", "csv"])
                 .default_value("json"),
         )
+        .arg(
+            Arg::with_name("output")
+                .help("O arquivo de saída")
+                .short("O")
+                .long("output")
+                .takes_value(true)
+                .default_value("output"),
+        )
 }

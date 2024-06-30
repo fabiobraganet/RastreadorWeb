@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Rust",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/rastreadorweb",
+            "args": [
+                "https://www.sonhodospesoficial.com.br/",
+                "--profundidade", "4",
+                "--filtro", "imagens",
+                "--formato", "json",
+                "--output", "output.json"
+            ],
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "preLaunchTask": "cargo build",
+            "sourceLanguages": ["rust"]
+        }
+    ]
+}
