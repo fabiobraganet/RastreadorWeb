@@ -1,5 +1,6 @@
 pub mod csv;
 pub mod json;
+pub mod persistence;
 
 pub const ALLOWED_CONTENT_TYPES: [&str; 4] = [
     "text/html",
