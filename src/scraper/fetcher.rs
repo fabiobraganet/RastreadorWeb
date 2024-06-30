@@ -1,13 +1,9 @@
 use reqwest::Client;
-use std::error::Error;
 
-pub async fn fetch_url(client: &Client, url: &str) -> Result<String, Box<dyn Error>> {
-    let response = client.get(url).send().await?.text().await?;
-    Ok(response)
+pub async fn fetch_url(client: &Client, url: &str) -> Result<(String, String), reqwest::Error> {
+    let response = client.get(url).send().await?;
+    let content_type = response.headers().get("content-type").map(|v| v.to_str().unwrap_or("")).unwrap_or("").to_string();
+    let text = response.text().await?;
+    Ok((text, content_type))
 }
 
-pub async fn fetch_data(url: &str) -> Result<String, Box<dyn Error>> {
-    let client = Client::new();
-    let data = fetch_url(&client, url).await?;
-    Ok(data)
-}
